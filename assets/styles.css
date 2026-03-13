@@ -171,14 +171,15 @@ body {
     display: flex;
     flex-direction: column;
     height: calc(100vh - 110px);
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .page-content-container .kpis-container { flex-shrink: 0; }
 
 .page-content-container .chart-row {
     flex: 1;
-    min-height: 0;
+    min-height: 200px;
     display: grid;
     gap: 10px;
 }
@@ -281,12 +282,6 @@ body {
     background-color: transparent;
     border-radius: 6px;
     padding: 6px 12px;
-    max-height: calc(50vh - 60px);
-    overflow: hidden;
-}
-
-.graph-card .js-plotly-plot {
-    max-height: calc(50vh - 90px) !important;
 }
 
 .graph-card h4 {
