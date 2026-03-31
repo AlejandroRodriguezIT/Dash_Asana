@@ -178,8 +178,7 @@ body {
 .page-content-container .kpis-container { flex-shrink: 0; }
 
 .page-content-container .chart-row {
-    flex: 1;
-    min-height: 200px;
+    flex: 0 0 auto;
     display: grid;
     gap: 10px;
 }
