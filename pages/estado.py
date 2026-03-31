@@ -23,7 +23,7 @@ from database import (
     get_task_custom_fields,
     get_project_members,
     get_owners_list,
-    get_teams_list,
+    get_portfolios_list,
 )
 
 dash.register_page(__name__, path="/estado", name="Estado de los Proyectos")
@@ -378,10 +378,10 @@ def _build_filter_sections():
         owner_vals = []
 
     try:
-        df_teams = get_teams_list()
-        team_vals = df_teams["team_name"].tolist()
+        df_portfolios = get_portfolios_list()
+        portfolio_vals = df_portfolios["portfolio_name"].tolist()
     except Exception:
-        team_vals = []
+        portfolio_vals = []
 
     sections = []
 
@@ -411,14 +411,14 @@ def _build_filter_sections():
             ])
         )
 
-    # Equipo toggle buttons
-    if team_vals:
+    # Portafolio toggle buttons
+    if portfolio_vals:
         sections.append(
             html.Div(className="filter-toggle-section", children=[
-                html.Span("Equipo", className="filter-toggle-label"),
+                html.Span("PORTAFOLIO", className="filter-toggle-label"),
                 html.Div(
                     className="filter-toggle-group",
-                    children=_build_toggle_buttons(team_vals, "team-btn"),
+                    children=_build_toggle_buttons(portfolio_vals, "team-btn"),
                 ),
             ])
         )
@@ -429,7 +429,7 @@ def _build_filter_sections():
 layout = html.Div([
     # Stores para filtros activos (listas de valores seleccionados)
     dcc.Store(id="active-owners", data=[]),
-    dcc.Store(id="active-teams", data=[]),
+    dcc.Store(id="active-teams", data=[]),  # now stores portfolio filter
     dcc.Store(id="selected-project-gid", data=None),
 
     # Filtros toggle
@@ -553,7 +553,7 @@ def update_projects_list(search, active_owners, active_teams, session):
     if active_owners:
         df = df[df["owner_name"].isin(active_owners)]
     if active_teams:
-        df = df[df["team_name"].isin(active_teams)]
+        df = df[df["portfolio_name"].isin(active_teams)]
 
     if df.empty:
         return html.P("No se encontraron proyectos con esos filtros",

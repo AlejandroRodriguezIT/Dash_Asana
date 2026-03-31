@@ -130,13 +130,13 @@ def _build_filters():
         assignees = sorted(
             df["assignee_name"].dropna().unique().tolist()
         ) if not df.empty else []
-        # Equipos desde las tareas prioritarias
-        teams = sorted(
-            df["team_name"].dropna().unique().tolist()
+        # Portafolios desde las tareas prioritarias
+        portfolios = sorted(
+            df["portfolio_name"].dropna().unique().tolist()
         ) if not df.empty else []
     except Exception:
         assignees = []
-        teams = []
+        portfolios = []
 
     sections = []
     if assignees:
@@ -145,11 +145,11 @@ def _build_filters():
             html.Div(className="filter-toggle-group",
                       children=_build_toggle_buttons(assignees, "prio-owner-btn")),
         ]))
-    if teams:
+    if portfolios:
         sections.append(html.Div(className="filter-toggle-section", children=[
-            html.Span("Equipo", className="filter-toggle-label"),
+            html.Span("PORTAFOLIO", className="filter-toggle-label"),
             html.Div(className="filter-toggle-group",
-                      children=_build_toggle_buttons(teams, "prio-team-btn")),
+                      children=_build_toggle_buttons(portfolios, "prio-team-btn")),
         ]))
     return sections
 
@@ -255,7 +255,7 @@ def render_priority_grid(active_owners, active_teams, session):
     if active_owners:
         df = df[df["assignee_name"].isin(active_owners)]
     if active_teams:
-        df = df[df["team_name"].isin(active_teams)]
+        df = df[df["portfolio_name"].isin(active_teams)]
 
     # Separar en buckets
     df_overdue = df[df["priority_bucket"] == "overdue"].copy()

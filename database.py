@@ -141,6 +141,7 @@ def get_projects_per_owner():
             COUNT(*) AS total
         FROM projects p
         WHERE {_PROJ_FILTER}
+          AND p.owner_name NOT IN ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez')
         GROUP BY p.owner_name
         ORDER BY total DESC
     """)
@@ -160,6 +161,7 @@ def get_projects_per_member():
         JOIN projects p ON pm.project_gid = p.gid
         WHERE {_PROJ_FILTER}
           AND pm.user_name IS NOT NULL
+          AND pm.user_name NOT IN ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez')
         GROUP BY pm.user_name
         HAVING total > 1
         ORDER BY total DESC
@@ -223,6 +225,7 @@ def get_all_projects():
         SELECT * FROM (
             SELECT
                 p.gid, p.name, p.owner_name, p.team_name,
+                COALESCE(pp.portfolio_name, 'Otros') AS portfolio_name,
                 p.created_at, p.modified_at, p.due_on, p.start_on,
                 p.notes, p.archived, p.permalink_url, p.color,
                 (SELECT COUNT(*) FROM task_projects tp
@@ -238,6 +241,7 @@ def get_all_projects():
                  WHERE tp.project_gid = p.gid AND t.completed = 0 AND t.parent_gid IS NULL
                 ) AS tareas_pendientes
             FROM projects p
+            LEFT JOIN portfolio_projects pp ON p.gid = pp.project_gid
             WHERE p.archived = 0
               AND p.name NOT LIKE 'Tareas previamente asignadas%%'
             ORDER BY p.name
@@ -336,6 +340,7 @@ def get_owners_list():
         SELECT DISTINCT COALESCE(owner_name, 'Sin asignar') AS owner_name
         FROM projects
         WHERE archived = 0
+          AND owner_name NOT IN ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez')
         ORDER BY owner_name
     """)
 
@@ -347,6 +352,20 @@ def get_teams_list():
         FROM projects
         WHERE archived = 0
         ORDER BY team_name
+    """)
+
+
+def get_portfolios_list():
+    """Lista de portafolios únicos."""
+    return query_to_df("""
+        SELECT DISTINCT COALESCE(pp.portfolio_name, 'Otros') AS portfolio_name
+        FROM projects p
+        LEFT JOIN portfolio_projects pp ON p.gid = pp.project_gid
+        WHERE p.archived = 0
+          AND p.name NOT LIKE 'Tareas previamente asignadas%%'
+        ORDER BY
+            CASE WHEN COALESCE(pp.portfolio_name, 'Otros') = 'Otros' THEN 1 ELSE 0 END,
+            portfolio_name
     """)
 
 
@@ -388,6 +407,26 @@ def get_budget_by_team():
     """)
 
 
+def get_budget_by_portfolio():
+    """Presupuesto total por portafolio (suma de Presupuesto sin IVA + Gasto Anual)."""
+    return query_to_df(f"""
+        SELECT
+            COALESCE(pp.portfolio_name, 'Otros') AS portfolio_name,
+            SUM(tcf.number_value) AS total_presupuesto
+        FROM task_custom_field_values tcf
+        JOIN tasks t ON tcf.task_gid = t.gid
+        JOIN task_projects tp ON t.gid = tp.task_gid
+        JOIN projects p ON tp.project_gid = p.gid
+        LEFT JOIN portfolio_projects pp ON p.gid = pp.project_gid
+        WHERE tcf.custom_field_name IN ('Presupuesto sin IVA', 'Gasto Anual')
+          AND tcf.number_value IS NOT NULL
+          AND tcf.number_value > 0
+          AND {_PROJ_FILTER}
+        GROUP BY pp.portfolio_name
+        ORDER BY total_presupuesto DESC
+    """)
+
+
 def get_budget_by_project(team_name: str):
     """Presupuesto desglosado por proyecto dentro de un equipo."""
     return query_to_df(f"""
@@ -407,6 +446,28 @@ def get_budget_by_project(team_name: str):
         GROUP BY p.gid, p.name
         ORDER BY total_presupuesto DESC
     """, params={"team_name": team_name})
+
+
+def get_budget_by_project_portfolio(portfolio_name: str):
+    """Presupuesto desglosado por proyecto dentro de un portafolio."""
+    return query_to_df(f"""
+        SELECT
+            p.gid AS project_gid,
+            p.name AS project_name,
+            SUM(tcf.number_value) AS total_presupuesto
+        FROM task_custom_field_values tcf
+        JOIN tasks t ON tcf.task_gid = t.gid
+        JOIN task_projects tp ON t.gid = tp.task_gid
+        JOIN projects p ON tp.project_gid = p.gid
+        LEFT JOIN portfolio_projects pp ON p.gid = pp.project_gid
+        WHERE tcf.custom_field_name IN ('Presupuesto sin IVA', 'Gasto Anual')
+          AND tcf.number_value IS NOT NULL
+          AND tcf.number_value > 0
+          AND {_PROJ_FILTER}
+          AND COALESCE(pp.portfolio_name, 'Otros') = :portfolio_name
+        GROUP BY p.gid, p.name
+        ORDER BY total_presupuesto DESC
+    """, params={"portfolio_name": portfolio_name})
 
 
 def get_budget_by_task(project_gid: str):
@@ -445,6 +506,8 @@ def get_delegated_tasks_detail(owner_name: str, assignee_name: str):
           AND t.completed = 0
           AND t.parent_gid IS NULL
           AND t.assignee_name = :assignee
+          AND t.assignee_name NOT IN ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez')
+          AND p.owner_name NOT IN ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez')
         ORDER BY t.due_on IS NULL, t.due_on, t.name
     """, params={"owner": owner_name, "assignee": assignee_name})
 
@@ -474,6 +537,7 @@ def get_priority_tasks():
             p.gid  AS project_gid,
             p.owner_name,
             p.team_name,
+            COALESCE(pp.portfolio_name, 'Otros') AS portfolio_name,
             CASE
                 WHEN t.due_on < CURDATE()
                     THEN 'overdue'
@@ -498,11 +562,14 @@ def get_priority_tasks():
         FROM tasks t
         JOIN task_projects tp ON t.gid = tp.task_gid
         JOIN projects p ON tp.project_gid = p.gid
+        LEFT JOIN portfolio_projects pp ON p.gid = pp.project_gid
         WHERE t.completed = 0
           AND t.parent_gid IS NULL
           AND t.due_on IS NOT NULL
           AND p.archived = 0
           AND p.name NOT LIKE 'Tareas previamente asignadas%%'
+          AND t.assignee_name NOT IN ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez')
+          AND p.owner_name NOT IN ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez')
           AND t.due_on <= DATE_ADD(
                 CURDATE(),
                 INTERVAL (13 - WEEKDAY(CURDATE())) DAY
@@ -518,6 +585,8 @@ def get_priority_tasks():
 def get_projects_for_owner(owner_name: str):
     """Proyectos asignados a un responsable con conteo de tareas.
     Excluye proyectos vacíos y 'Tareas previamente asignadas'."""
+    if owner_name in ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez'):
+        return query_to_df("SELECT NULL AS gid LIMIT 0")
     return query_to_df(
         f"""
         SELECT * FROM (
@@ -552,6 +621,8 @@ def get_owner_pending_tasks(owner_name: str):
     Tareas pendientes en proyectos de un responsable,
     ordenadas por fecha de entrega (más urgentes primero).
     """
+    if owner_name in ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez'):
+        return query_to_df("SELECT NULL AS gid LIMIT 0")
     return query_to_df(
         """
         SELECT
@@ -577,6 +648,8 @@ def get_owner_delegated_pending(owner_name: str):
     Tareas pendientes en proyectos del responsable que están asignadas
     a OTRAS personas (tareas delegadas sin completar).
     """
+    if owner_name in ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez'):
+        return query_to_df("SELECT NULL AS assignee_name LIMIT 0")
     return query_to_df(
         """
         SELECT
@@ -592,6 +665,7 @@ def get_owner_delegated_pending(owner_name: str):
           AND t.parent_gid IS NULL
           AND t.assignee_name IS NOT NULL
           AND t.assignee_name != :owner
+          AND t.assignee_name NOT IN ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez')
         GROUP BY t.assignee_name
         ORDER BY tareas_pendientes DESC
         """,
@@ -601,6 +675,8 @@ def get_owner_delegated_pending(owner_name: str):
 
 def get_owner_tasks_by_status(owner_name: str):
     """Resumen de tareas completadas vs pendientes por proyecto del responsable."""
+    if owner_name in ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez'):
+        return query_to_df("SELECT NULL AS project_name LIMIT 0")
     return query_to_df(
         """
         SELECT
@@ -626,6 +702,8 @@ def get_owner_tasks_by_status(owner_name: str):
 
 def get_projects_for_member(user_name: str):
     """Proyectos en los que participa un miembro/proveedor."""
+    if user_name in ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez'):
+        return query_to_df("SELECT NULL AS gid LIMIT 0")
     return query_to_df(
         """
         SELECT DISTINCT
@@ -643,6 +721,7 @@ def get_projects_for_member(user_name: str):
         JOIN project_memberships pm ON p.gid = pm.project_gid
         WHERE pm.user_name = :user_name
           AND p.archived = 0
+          AND p.owner_name NOT IN ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez')
         ORDER BY p.due_on IS NULL, p.due_on, p.name
         """,
         params={"user_name": user_name}
@@ -651,6 +730,8 @@ def get_projects_for_member(user_name: str):
 
 def get_member_tasks_assigned(user_name: str):
     """Tareas asignadas directamente a un miembro/proveedor."""
+    if user_name in ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez'):
+        return query_to_df("SELECT NULL AS gid LIMIT 0")
     return query_to_df(
         """
         SELECT
@@ -663,6 +744,7 @@ def get_member_tasks_assigned(user_name: str):
         WHERE t.assignee_name = :user_name
           AND p.archived = 0
           AND t.parent_gid IS NULL
+          AND p.owner_name NOT IN ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez')
         ORDER BY t.completed, t.due_on IS NULL, t.due_on
         """,
         params={"user_name": user_name}
@@ -674,6 +756,8 @@ def get_member_custom_field_budgets(user_name: str):
     Valores de custom fields numéricos (posibles presupuestos)
     en tareas/proyectos donde participa el miembro.
     """
+    if user_name in ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez'):
+        return query_to_df("SELECT NULL AS project_name LIMIT 0")
     return query_to_df(
         """
         SELECT
@@ -689,6 +773,7 @@ def get_member_custom_field_budgets(user_name: str):
         WHERE pm.user_name = :user_name
           AND p.archived = 0
           AND tcf.number_value IS NOT NULL
+          AND p.owner_name NOT IN ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez')
         ORDER BY p.name, tcf.custom_field_name
         """,
         params={"user_name": user_name}

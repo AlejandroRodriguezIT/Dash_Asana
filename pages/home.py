@@ -15,8 +15,8 @@ from database import (
     get_global_task_stats,
     get_projects_per_owner,
     get_projects_per_member,
-    get_budget_by_team,
-    get_budget_by_project,
+    get_budget_by_portfolio,
+    get_budget_by_project_portfolio,
     get_budget_by_task,
     query_to_df,
 )
@@ -66,7 +66,7 @@ def _build_kpis():
     except Exception:
         total_t, pend_t, comp_t, pct = 0, 0, 0, 0
     try:
-        df_budget = get_budget_by_team()
+        df_budget = get_budget_by_portfolio()
         total_budget = int(df_budget["total_presupuesto"].sum()) if not df_budget.empty else 0
     except Exception:
         total_budget = 0
@@ -172,36 +172,36 @@ def _build_member_chart():
 
 
 def _build_budget_donut():
-    """Donut chart: presupuesto por equipo (mejor para pocos valores)."""
+    """Donut chart: presupuesto por portafolio."""
     try:
-        df = get_budget_by_team()
+        df = get_budget_by_portfolio()
         if df.empty:
             return html.P("No hay datos de presupuesto", style={"color": "#999"})
     except Exception:
         return html.P("Error cargando datos", style={"color": "#e74c3c"})
 
-    teams = df["team_name"].tolist()
-    # Full names in bold for display
-    display_teams = [f"<b>{t}</b>" for t in teams]
+    portfolios = df["portfolio_name"].tolist()
+    display_portfolios = [f"<b>{p}</b>" for p in portfolios]
     amounts = df["total_presupuesto"].tolist()
     total = sum(amounts)
 
     colors = ["#8e44ad", "#3498db", "#e67e22", "#2ecc71", "#e74c3c", "#f39c12"]
 
     fig = go.Figure(data=[go.Pie(
-        labels=display_teams, values=amounts,
+        labels=display_portfolios, values=amounts,
         hole=0.55,
-        marker=dict(colors=colors[:len(teams)]),
+        marker=dict(colors=colors[:len(portfolios)]),
         textinfo="label+percent+value",
         texttemplate="<b>%{label}</b><br>%{percent}<br>%{value:,.0f}€",
-        textfont=dict(size=10, family="Montserrat", color="#1a3a5c"),
-        insidetextorientation="horizontal",
+        textfont=dict(size=9, family="Montserrat", color="#1a3a5c"),
+        textposition="outside",
         hovertemplate="Ver Presupuesto <b>%{customdata}</b><extra></extra>",
-        customdata=teams,
+        customdata=portfolios,
     )])
     fig.update_layout(
-        margin=dict(b=40, t=5, l=10, r=10), height=180,
+        margin=dict(b=30, t=30, l=80, r=80), height=250,
         showlegend=False,
+        uniformtext_minsize=8, uniformtext_mode="hide",
         annotations=[dict(text=f"<b>{_format_eur(total)}</b>", x=0.5, y=0.5,
                           font_size=16, font_family="Montserrat",
                           showarrow=False, font_color="#1a3a5c")],
@@ -221,6 +221,8 @@ def _build_delegated_ranking_chart():
             WHERE t.completed = 0 AND t.parent_gid IS NULL
               AND t.assignee_name IS NOT NULL AND p.archived = 0
               AND p.name NOT LIKE 'Tareas previamente asignadas%%'
+              AND t.assignee_name NOT IN ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez')
+              AND p.owner_name NOT IN ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez')
             GROUP BY t.assignee_name HAVING pendientes > 1
             ORDER BY pendientes DESC
         """)
@@ -229,6 +231,11 @@ def _build_delegated_ranking_chart():
     except Exception:
         return html.P("Error cargando datos", style={"color": "#e74c3c"})
 
+    # Filtrar adicionalmente cualquier variante de Ivan Sánchez
+    df = df[~df["assignee_name"].str.contains(r"[Ii]v[aá]n.*[Ss][aá]nchez", case=False, na=False, regex=True)]
+    if df.empty:
+        return html.P("Sin datos", style={"color": "#999"})
+    
     names, counts = df["assignee_name"].tolist(), df["pendientes"].tolist()
     short = [_abbreviate_name(n) for n in names]
     fig = go.Figure()
@@ -286,7 +293,7 @@ def render_home(session):
                 _build_owner_chart(),
             ]),
             html.Div(className="graph-card", children=[
-                html.H4("Presupuesto por Equipo"),
+                html.H4("Presupuesto por Portafolio"),
                 html.P("Haz clic en un segmento para ver el desglose",
                        style={"fontSize": "0.7rem", "color": "#999",
                               "textAlign": "center", "margin": "0 0 3px 0"}),
@@ -295,7 +302,7 @@ def render_home(session):
         ]),
 
         # Fila 2: Ranking delegadas (ancho completo)
-        html.Div(className="chart-row", children=[
+        html.Div(className="chart-row", style={"position": "relative", "zIndex": "10"}, children=[
             html.Div(className="graph-card", children=[
                 html.H4("Ranking de Tareas Delegadas Pendientes"),
                 html.P("Haz clic en una barra para ver el detalle",
@@ -353,6 +360,7 @@ def show_delegated_ranking_detail(click_data, close_clicks):
             WHERE t.completed = 0 AND t.parent_gid IS NULL
               AND t.assignee_name = :assignee AND p.archived = 0
               AND p.name NOT LIKE 'Tareas previamente asignadas%%'
+              AND p.owner_name NOT IN ('Ivan Sánchez', 'Iván Sánchez', 'Ivan Sanchez', 'Iván Sanchez')
             ORDER BY t.due_on IS NULL, t.due_on
         """, params={"assignee": assignee})
         if df.empty:
@@ -410,14 +418,14 @@ def show_budget_team_drill(click_data, close_clicks):
     if not click_data or not click_data.get("points"):
         return no_update
 
-    # For donut, customdata is the team name
+    # For donut, customdata is the portfolio name
     point = click_data["points"][0]
-    team_name = point.get("customdata", "") or point.get("label", "")
-    if not team_name:
+    portfolio_name = point.get("customdata", "") or point.get("label", "")
+    if not portfolio_name:
         return no_update
 
     try:
-        df = get_budget_by_project(team_name)
+        df = get_budget_by_project_portfolio(portfolio_name)
         if df.empty:
             return None
     except Exception:
@@ -444,7 +452,7 @@ def show_budget_team_drill(click_data, close_clicks):
         html.Div(className="detail-panel", style={"maxWidth": "950px"}, children=[
             html.Button("✕", id="close-budget-drill",
                          className="detail-close-btn", n_clicks=0),
-            html.H3(f"Presupuesto: {team_name}", className="detail-title"),
+            html.H3(f"Presupuesto: {portfolio_name}", className="detail-title"),
             html.P(f"Total: {_format_eur(total)}",
                    style={"fontSize": "0.9rem", "color": "#8e44ad",
                           "fontWeight": "700", "marginBottom": "10px"}),
