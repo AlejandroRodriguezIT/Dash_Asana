@@ -124,14 +124,14 @@ def _build_owner_chart():
     fig.add_trace(go.Bar(
         x=list(range(len(names))), y=totals, marker_color="#2c5282",
         text=[str(v) for v in totals], textposition="outside",
-        textfont=dict(color="#333", size=9, family="Montserrat", weight="bold"),
+        textfont=dict(color="#333", size=7, family="Montserrat", weight="bold"),
         hovertemplate="Ver proyectos de <b>%{customdata}</b><extra></extra>",
         customdata=names,
     ))
     fig.update_layout(
-        margin=dict(b=50, t=5, l=15, r=15), height=180,
+        margin=dict(b=35, t=5, l=10, r=10), height=135,
         xaxis=dict(tickmode="array", tickvals=list(range(len(names))),
-                   ticktext=short, tickfont=dict(size=8, family="Montserrat", weight="bold"),
+                   ticktext=short, tickfont=dict(size=6, family="Montserrat", weight="bold"),
                    tickangle=0),
         yaxis=dict(showticklabels=False, range=[0, max(totals)*1.08 if totals else 1]),
         plot_bgcolor="white", paper_bgcolor="white",
@@ -156,14 +156,14 @@ def _build_member_chart():
     fig.add_trace(go.Bar(
         x=list(range(len(names))), y=totals, marker_color="#1a6e3a",
         text=[str(v) for v in totals], textposition="outside",
-        textfont=dict(color="#333", size=9, family="Montserrat", weight="bold"),
+        textfont=dict(color="#333", size=7, family="Montserrat", weight="bold"),
         hovertemplate="<b>%{customdata}</b><br>Proyectos: %{y}<extra></extra>",
         customdata=names,
     ))
     fig.update_layout(
-        margin=dict(b=55, t=5, l=15, r=15), height=210,
+        margin=dict(b=40, t=5, l=10, r=10), height=155,
         xaxis=dict(tickmode="array", tickvals=list(range(len(names))),
-                   ticktext=short, tickfont=dict(size=8, family="Montserrat", weight="bold"),
+                   ticktext=short, tickfont=dict(size=6, family="Montserrat", weight="bold"),
                    tickangle=-30),
         yaxis=dict(showticklabels=False, range=[0, max(totals)*1.25 if totals else 1]),
         plot_bgcolor="white", paper_bgcolor="white",
@@ -193,17 +193,17 @@ def _build_budget_donut():
         marker=dict(colors=colors[:len(portfolios)]),
         textinfo="label+percent+value",
         texttemplate="<b>%{label}</b><br>%{percent}<br>%{value:,.0f}€",
-        textfont=dict(size=9, family="Montserrat", color="#1a3a5c"),
+        textfont=dict(size=7, family="Montserrat", color="#1a3a5c"),
         textposition="outside",
         hovertemplate="Ver Presupuesto <b>%{customdata}</b><extra></extra>",
         customdata=portfolios,
     )])
     fig.update_layout(
-        margin=dict(b=30, t=30, l=80, r=80), height=250,
+        margin=dict(b=20, t=20, l=60, r=60), height=190,
         showlegend=False,
-        uniformtext_minsize=8, uniformtext_mode="hide",
+        uniformtext_minsize=6, uniformtext_mode="hide",
         annotations=[dict(text=f"<b>{_format_eur(total)}</b>", x=0.5, y=0.5,
-                          font_size=16, font_family="Montserrat",
+                          font_size=13, font_family="Montserrat",
                           showarrow=False, font_color="#1a3a5c")],
         plot_bgcolor="white", paper_bgcolor="white",
     )
@@ -242,14 +242,14 @@ def _build_delegated_ranking_chart():
     fig.add_trace(go.Bar(
         x=list(range(len(names))), y=counts, marker_color="#e67e22",
         text=[str(v) for v in counts], textposition="outside",
-        textfont=dict(color="#333", size=10, family="Montserrat", weight="bold"),
+        textfont=dict(color="#333", size=7, family="Montserrat", weight="bold"),
         hovertemplate="Ver tareas de <b>%{customdata}</b><extra></extra>",
         customdata=names,
     ))
     fig.update_layout(
-        margin=dict(b=50, t=5, l=15, r=15), height=150,
+        margin=dict(b=35, t=5, l=10, r=10), height=115,
         xaxis=dict(tickmode="array", tickvals=list(range(len(names))),
-                   ticktext=short, tickfont=dict(size=7, family="Montserrat", weight="bold"),
+                   ticktext=short, tickfont=dict(size=5, family="Montserrat", weight="bold"),
                    tickangle=0),
         yaxis=dict(showticklabels=False, range=[0, max(counts)*1.08 if counts else 1]),
         plot_bgcolor="white", paper_bgcolor="white",
@@ -286,17 +286,19 @@ def render_home(session):
         html.Div(className="chart-row chart-row-2col",
                  style={"marginBottom": "8px"}, children=[
             html.Div(className="graph-card", children=[
-                html.H4("Número de Proyectos por Responsable"),
+                html.H4("Número de Proyectos por Responsable",
+                        style={"fontSize": "0.8rem"}),
                 html.P("Haz clic en una barra para ver la ficha",
-                       style={"fontSize": "0.7rem", "color": "#999",
-                              "textAlign": "center", "margin": "0 0 3px 0"}),
+                       style={"fontSize": "0.6rem", "color": "#999",
+                              "textAlign": "center", "margin": "0 0 2px 0"}),
                 _build_owner_chart(),
             ]),
             html.Div(className="graph-card", children=[
-                html.H4("Presupuesto por Portafolio"),
+                html.H4("Presupuesto por Portafolio",
+                        style={"fontSize": "0.8rem"}),
                 html.P("Haz clic en un segmento para ver el desglose",
-                       style={"fontSize": "0.7rem", "color": "#999",
-                              "textAlign": "center", "margin": "0 0 3px 0"}),
+                       style={"fontSize": "0.6rem", "color": "#999",
+                              "textAlign": "center", "margin": "0 0 2px 0"}),
                 _build_budget_donut(),
             ]),
         ]),
@@ -304,10 +306,11 @@ def render_home(session):
         # Fila 2: Ranking delegadas (ancho completo)
         html.Div(className="chart-row", style={"position": "relative", "zIndex": "10"}, children=[
             html.Div(className="graph-card", children=[
-                html.H4("Ranking de Tareas Delegadas Pendientes"),
+                html.H4("Ranking de Tareas Delegadas Pendientes",
+                        style={"fontSize": "0.8rem"}),
                 html.P("Haz clic en una barra para ver el detalle",
-                       style={"fontSize": "0.7rem", "color": "#999",
-                              "textAlign": "center", "margin": "0 0 3px 0"}),
+                       style={"fontSize": "0.6rem", "color": "#999",
+                              "textAlign": "center", "margin": "0 0 2px 0"}),
                 _build_delegated_ranking_chart(),
             ]),
         ]),
