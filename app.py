@@ -132,6 +132,7 @@ def create_header():
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     dcc.Store(id='session-store', storage_type='session'),
+    html.Div(id='resize-trigger', style={'display': 'none'}),
     # Login overlay
     create_login(),
     # App principal (oculta hasta login)
@@ -282,6 +283,29 @@ def toggle_login(session, pathname):
         f"Usuario: {nombre}",
         rol,
     )
+
+
+# =============================================================================
+# CLIENTSIDE: forzar resize tras login para que Plotly recalcule
+# =============================================================================
+
+app.clientside_callback(
+    """
+    function(containerStyle) {
+        if (containerStyle && containerStyle.display !== 'none') {
+            setTimeout(function() {
+                window.dispatchEvent(new Event('resize'));
+            }, 200);
+            setTimeout(function() {
+                window.dispatchEvent(new Event('resize'));
+            }, 600);
+        }
+        return '';
+    }
+    """,
+    Output('resize-trigger', 'children'),
+    Input('app-container', 'style'),
+)
 
 
 # =============================================================================

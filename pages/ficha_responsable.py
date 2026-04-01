@@ -163,7 +163,7 @@ def _build_task_status_pies(owner_name):
 
     n_projects = len(df)
     pie_sz = max(60, min(95, 950 // max(n_projects, 1)))
-    font_sz = max(9, min(14, pie_sz // 7))
+    font_sz = max(11, min(16, pie_sz // 5))
 
     pie_cards = []
     project_names = []
@@ -199,7 +199,7 @@ def _build_task_status_pies(owner_name):
                           style={"height": f"{pie_sz}px", "width": f"{pie_sz}px",
                                  "margin": "0 auto", "cursor": "pointer"}),
                 html.Div(pname,
-                         style={"fontSize": "0.7rem", "fontWeight": "700",
+                         style={"fontSize": "0.75rem", "fontWeight": "700",
                                 "color": "#333", "marginTop": "3px",
                                 "lineHeight": "1.15", "wordBreak": "break-word",
                                 "overflow": "hidden",
@@ -207,7 +207,7 @@ def _build_task_status_pies(owner_name):
                                 "WebkitLineClamp": "2",
                                 "WebkitBoxOrient": "vertical"}),
                 html.Div(f"{comp}/{total}",
-                         style={"fontSize": "0.65rem", "color": "#666",
+                         style={"fontSize": "0.7rem", "color": "#666",
                                 "fontWeight": "600"}),
             ])
         )
@@ -233,15 +233,17 @@ def _build_delegated_chart(owner_name):
 
     names = df["assignee_name"].tolist()
     short = [_abbreviate_name(n) for n in names]
+    pending = df["tareas_pendientes"].tolist()
+    bar_labels = [f"{s}<br><b>{v}</b>" for s, v in zip(short, pending)]
 
     fig = go.Figure()
     fig.add_trace(go.Bar(
-        x=short,
-        y=df["tareas_pendientes"],
+        x=list(range(len(names))),
+        y=pending,
         marker_color="#e67e22",
-        text=df["tareas_pendientes"],
+        text=bar_labels,
         textposition="outside",
-        textfont=dict(color="#333", size=10, family="Montserrat", weight="bold"),
+        textfont=dict(color="#333", size=11, family="Montserrat", weight="bold"),
         hovertemplate=(
             "<b>%{customdata}</b><br>"
             "Tareas pendientes: %{y}<br>"
@@ -255,10 +257,9 @@ def _build_delegated_chart(owner_name):
     # Dynamic height: min 200 for few bars, more for many
     chart_h = max(200, min(400, 120 + n_bars * 25))
     fig.update_layout(
-        margin=dict(b=80, t=10, l=20, r=20),
+        margin=dict(b=10, t=25, l=20, r=20),
         height=chart_h,
-        xaxis=dict(tickfont=dict(size=9, family="Montserrat", weight="bold"),
-                   tickangle=-30),
+        xaxis=dict(showticklabels=False),
         yaxis=dict(showticklabels=False, range=[0, max_y]),
         plot_bgcolor="white",
         paper_bgcolor="white",

@@ -120,24 +120,23 @@ def _build_owner_chart():
         return html.P("Error cargando datos", style={"color": "#e74c3c"})
     names, totals = df["owner_name"].tolist(), df["total"].tolist()
     short = [_abbreviate_name(n) for n in names]
+    bar_labels = [f"{s}<br><b>{v}</b>" for s, v in zip(short, totals)]
     fig = go.Figure()
     fig.add_trace(go.Bar(
         x=list(range(len(names))), y=totals, marker_color="#2c5282",
-        text=[str(v) for v in totals], textposition="outside",
-        textfont=dict(color="#333", size=9, family="Montserrat", weight="bold"),
+        text=bar_labels, textposition="outside",
+        textfont=dict(color="#333", size=10, family="Montserrat", weight="bold"),
         hovertemplate="Ver proyectos de <b>%{customdata}</b><extra></extra>",
         customdata=names,
     ))
     fig.update_layout(
-        margin=dict(b=35, t=5, l=10, r=10), height=135,
-        xaxis=dict(tickmode="array", tickvals=list(range(len(names))),
-                   ticktext=short, tickfont=dict(size=7, family="Montserrat", weight="bold"),
-                   tickangle=0),
-        yaxis=dict(showticklabels=False, range=[0, max(totals)*1.08 if totals else 1]),
+        margin=dict(b=10, t=25, l=10, r=10), height=200,
+        xaxis=dict(showticklabels=False),
+        yaxis=dict(showticklabels=False, range=[0, max(totals)*1.25 if totals else 1]),
         plot_bgcolor="white", paper_bgcolor="white",
     )
     return dcc.Graph(id="chart-owner", figure=fig, config={"displayModeBar": False},
-                      responsive=True)
+                      style={"height": "200px"})
 
 
 def _build_member_chart():
@@ -152,23 +151,23 @@ def _build_member_chart():
         return html.P("Sin datos", style={"color": "#999"})
     names, totals = df["user_name"].tolist(), df["total"].tolist()
     short = [_abbreviate_name(n) for n in names]
+    bar_labels = [f"{s}<br><b>{v}</b>" for s, v in zip(short, totals)]
     fig = go.Figure()
     fig.add_trace(go.Bar(
         x=list(range(len(names))), y=totals, marker_color="#1a6e3a",
-        text=[str(v) for v in totals], textposition="outside",
-        textfont=dict(color="#333", size=7, family="Montserrat", weight="bold"),
+        text=bar_labels, textposition="outside",
+        textfont=dict(color="#333", size=10, family="Montserrat", weight="bold"),
         hovertemplate="<b>%{customdata}</b><br>Proyectos: %{y}<extra></extra>",
         customdata=names,
     ))
     fig.update_layout(
-        margin=dict(b=40, t=5, l=10, r=10), height=155,
-        xaxis=dict(tickmode="array", tickvals=list(range(len(names))),
-                   ticktext=short, tickfont=dict(size=6, family="Montserrat", weight="bold"),
-                   tickangle=-30),
-        yaxis=dict(showticklabels=False, range=[0, max(totals)*1.25 if totals else 1]),
+        margin=dict(b=10, t=25, l=10, r=10), height=200,
+        xaxis=dict(showticklabels=False),
+        yaxis=dict(showticklabels=False, range=[0, max(totals)*1.35 if totals else 1]),
         plot_bgcolor="white", paper_bgcolor="white",
     )
-    return dcc.Graph(id="chart-member", figure=fig, config={"displayModeBar": False})
+    return dcc.Graph(id="chart-member", figure=fig, config={"displayModeBar": False},
+                      style={"height": "200px"})
 
 
 def _build_budget_donut():
@@ -193,22 +192,22 @@ def _build_budget_donut():
         marker=dict(colors=colors[:len(portfolios)]),
         textinfo="label+percent+value",
         texttemplate="<b>%{label}</b><br>%{percent}<br>%{value:,.0f}€",
-        textfont=dict(size=8, family="Montserrat", color="#1a3a5c"),
+        textfont=dict(size=10, family="Montserrat", color="#1a3a5c"),
         textposition="outside",
         hovertemplate="Ver Presupuesto <b>%{customdata}</b><extra></extra>",
         customdata=portfolios,
     )])
     fig.update_layout(
-        margin=dict(b=20, t=20, l=60, r=60), height=190,
+        margin=dict(b=25, t=25, l=70, r=70), height=250,
         showlegend=False,
-        uniformtext_minsize=7, uniformtext_mode="hide",
+        uniformtext_minsize=8, uniformtext_mode="hide",
         annotations=[dict(text=f"<b>{_format_eur(total)}</b>", x=0.5, y=0.5,
-                          font_size=14, font_family="Montserrat",
+                          font_size=16, font_family="Montserrat",
                           showarrow=False, font_color="#1a3a5c")],
         plot_bgcolor="white", paper_bgcolor="white",
     )
     return dcc.Graph(id="chart-budget-team", figure=fig, config={"displayModeBar": False},
-                      responsive=True)
+                      style={"height": "250px"})
 
 
 def _build_delegated_ranking_chart():
@@ -238,24 +237,24 @@ def _build_delegated_ranking_chart():
     
     names, counts = df["assignee_name"].tolist(), df["pendientes"].tolist()
     short = [_abbreviate_name(n) for n in names]
+    bar_labels = [f"{s}<br><b>{v}</b>" for s, v in zip(short, counts)]
     fig = go.Figure()
     fig.add_trace(go.Bar(
         x=list(range(len(names))), y=counts, marker_color="#e67e22",
-        text=[str(v) for v in counts], textposition="outside",
-        textfont=dict(color="#333", size=9, family="Montserrat", weight="bold"),
+        text=bar_labels, textposition="outside",
+        textfont=dict(color="#333", size=10, family="Montserrat", weight="bold"),
         hovertemplate="Ver tareas de <b>%{customdata}</b><extra></extra>",
         customdata=names,
     ))
     fig.update_layout(
-        margin=dict(b=35, t=5, l=10, r=10), height=115,
-        xaxis=dict(tickmode="array", tickvals=list(range(len(names))),
-                   ticktext=short, tickfont=dict(size=7, family="Montserrat", weight="bold"),
-                   tickangle=0),
-        yaxis=dict(showticklabels=False, range=[0, max(counts)*1.08 if counts else 1]),
+        margin=dict(b=10, t=25, l=10, r=10), height=180,
+        xaxis=dict(showticklabels=False),
+        yaxis=dict(showticklabels=False, range=[0, max(counts)*1.25 if counts else 1]),
         plot_bgcolor="white", paper_bgcolor="white",
     )
     return dcc.Graph(id="chart-delegated-ranking", figure=fig,
-                     config={"displayModeBar": False}, responsive=True)
+                     config={"displayModeBar": False},
+                     style={"height": "180px"})
 
 
 # =============================================================================
