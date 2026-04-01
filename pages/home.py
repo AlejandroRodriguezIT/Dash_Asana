@@ -125,18 +125,18 @@ def _build_owner_chart():
     fig.add_trace(go.Bar(
         x=list(range(len(names))), y=totals, marker_color="#2c5282",
         text=bar_labels, textposition="outside",
-        textfont=dict(color="#333", size=10, family="Montserrat", weight="bold"),
+        textfont=dict(color="#333", size=15, family="Montserrat", weight="bold"),
         hovertemplate="Ver proyectos de <b>%{customdata}</b><extra></extra>",
         customdata=names,
     ))
     fig.update_layout(
-        margin=dict(b=10, t=25, l=10, r=10), height=200,
+        margin=dict(b=10, t=40, l=10, r=10), height=280,
         xaxis=dict(showticklabels=False),
-        yaxis=dict(showticklabels=False, range=[0, max(totals)*1.25 if totals else 1]),
+        yaxis=dict(showticklabels=False, range=[0, max(totals)*1.45 if totals else 1]),
         plot_bgcolor="white", paper_bgcolor="white",
     )
     return dcc.Graph(id="chart-owner", figure=fig, config={"displayModeBar": False},
-                      style={"height": "200px"})
+                      style={"height": "280px"})
 
 
 def _build_member_chart():
@@ -156,18 +156,18 @@ def _build_member_chart():
     fig.add_trace(go.Bar(
         x=list(range(len(names))), y=totals, marker_color="#1a6e3a",
         text=bar_labels, textposition="outside",
-        textfont=dict(color="#333", size=10, family="Montserrat", weight="bold"),
+        textfont=dict(color="#333", size=15, family="Montserrat", weight="bold"),
         hovertemplate="<b>%{customdata}</b><br>Proyectos: %{y}<extra></extra>",
         customdata=names,
     ))
     fig.update_layout(
-        margin=dict(b=10, t=25, l=10, r=10), height=200,
+        margin=dict(b=10, t=40, l=10, r=10), height=280,
         xaxis=dict(showticklabels=False),
-        yaxis=dict(showticklabels=False, range=[0, max(totals)*1.35 if totals else 1]),
+        yaxis=dict(showticklabels=False, range=[0, max(totals)*1.5 if totals else 1]),
         plot_bgcolor="white", paper_bgcolor="white",
     )
     return dcc.Graph(id="chart-member", figure=fig, config={"displayModeBar": False},
-                      style={"height": "200px"})
+                      style={"height": "280px"})
 
 
 def _build_budget_donut():
@@ -192,22 +192,22 @@ def _build_budget_donut():
         marker=dict(colors=colors[:len(portfolios)]),
         textinfo="label+percent+value",
         texttemplate="<b>%{label}</b><br>%{percent}<br>%{value:,.0f}€",
-        textfont=dict(size=10, family="Montserrat", color="#1a3a5c"),
+        textfont=dict(size=13, family="Montserrat", color="#1a3a5c"),
         textposition="outside",
         hovertemplate="Ver Presupuesto <b>%{customdata}</b><extra></extra>",
         customdata=portfolios,
     )])
     fig.update_layout(
-        margin=dict(b=25, t=25, l=70, r=70), height=250,
+        margin=dict(b=30, t=30, l=80, r=80), height=300,
         showlegend=False,
-        uniformtext_minsize=8, uniformtext_mode="hide",
+        uniformtext_minsize=10, uniformtext_mode="hide",
         annotations=[dict(text=f"<b>{_format_eur(total)}</b>", x=0.5, y=0.5,
-                          font_size=16, font_family="Montserrat",
+                          font_size=18, font_family="Montserrat",
                           showarrow=False, font_color="#1a3a5c")],
         plot_bgcolor="white", paper_bgcolor="white",
     )
     return dcc.Graph(id="chart-budget-team", figure=fig, config={"displayModeBar": False},
-                      style={"height": "250px"})
+                      style={"height": "300px"})
 
 
 def _build_delegated_ranking_chart():
@@ -242,19 +242,19 @@ def _build_delegated_ranking_chart():
     fig.add_trace(go.Bar(
         x=list(range(len(names))), y=counts, marker_color="#e67e22",
         text=bar_labels, textposition="outside",
-        textfont=dict(color="#333", size=10, family="Montserrat", weight="bold"),
+        textfont=dict(color="#333", size=15, family="Montserrat", weight="bold"),
         hovertemplate="Ver tareas de <b>%{customdata}</b><extra></extra>",
         customdata=names,
     ))
     fig.update_layout(
-        margin=dict(b=10, t=25, l=10, r=10), height=180,
+        margin=dict(b=10, t=40, l=10, r=10), height=250,
         xaxis=dict(showticklabels=False),
-        yaxis=dict(showticklabels=False, range=[0, max(counts)*1.25 if counts else 1]),
+        yaxis=dict(showticklabels=False, range=[0, max(counts)*1.45 if counts else 1]),
         plot_bgcolor="white", paper_bgcolor="white",
     )
     return dcc.Graph(id="chart-delegated-ranking", figure=fig,
                      config={"displayModeBar": False},
-                     style={"height": "180px"})
+                     style={"height": "250px"})
 
 
 # =============================================================================

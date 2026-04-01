@@ -243,7 +243,7 @@ def _build_delegated_chart(owner_name):
         marker_color="#e67e22",
         text=bar_labels,
         textposition="outside",
-        textfont=dict(color="#333", size=11, family="Montserrat", weight="bold"),
+        textfont=dict(color="#333", size=15, family="Montserrat", weight="bold"),
         hovertemplate=(
             "<b>%{customdata}</b><br>"
             "Tareas pendientes: %{y}<br>"
@@ -252,12 +252,12 @@ def _build_delegated_chart(owner_name):
         customdata=names,
     ))
 
-    max_y = df["tareas_pendientes"].max() * 1.3 if not df.empty else 1
+    max_y = df["tareas_pendientes"].max() * 1.5 if not df.empty else 1
     n_bars = len(df)
-    # Dynamic height: min 200 for few bars, more for many
-    chart_h = max(200, min(400, 120 + n_bars * 25))
+    # Dynamic height: min 300 for few bars, more for many
+    chart_h = max(300, min(500, 200 + n_bars * 25))
     fig.update_layout(
-        margin=dict(b=10, t=25, l=20, r=20),
+        margin=dict(b=10, t=40, l=20, r=20),
         height=chart_h,
         xaxis=dict(showticklabels=False),
         yaxis=dict(showticklabels=False, range=[0, max_y]),
