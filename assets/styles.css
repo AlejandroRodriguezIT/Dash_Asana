@@ -170,9 +170,9 @@ body {
 .page-content-container {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 110px);
     overflow-y: auto;
     overflow-x: hidden;
+    padding-bottom: 5px;
 }
 
 .page-content-container .kpis-container { flex-shrink: 0; }

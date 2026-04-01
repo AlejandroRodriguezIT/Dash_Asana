@@ -127,8 +127,11 @@ def _build_filters():
     try:
         df = get_priority_tasks()
         # Responsable = assignee de la tarea (no owner del proyecto)
+        import re
+        _ivan_re = re.compile(r'[Ii]v[aá]n.*[Ss][aá]nchez', re.IGNORECASE)
         assignees = sorted(
-            df["assignee_name"].dropna().unique().tolist()
+            [a for a in df["assignee_name"].dropna().unique().tolist()
+             if not _ivan_re.search(a)]
         ) if not df.empty else []
         # Portafolios desde las tareas prioritarias
         portfolios = sorted(

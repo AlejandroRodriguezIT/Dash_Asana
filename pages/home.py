@@ -41,11 +41,19 @@ def _format_eur(v):
     return f"{v:,.0f}€".replace(",", ".")
 
 
+# Mapeo manual de emails a nombres abreviados
+_EMAIL_NAME_MAP = {
+    "manuel.sainz@rcdeportivo.es": "M. Sainz",
+}
+
+
 def _abbreviate_name(name):
     """Abbreviate person name: 'Juan García Collazo' -> 'J. García'.
-    Emails and single words stay unchanged."""
-    if not name or "@" in name:
+    Emails are mapped via _EMAIL_NAME_MAP or returned unchanged."""
+    if not name:
         return name
+    if "@" in name:
+        return _EMAIL_NAME_MAP.get(name, name)
     parts = name.split()
     if len(parts) >= 2:
         return f"{parts[0][0]}. {parts[1]}"
@@ -286,7 +294,7 @@ def render_home(session):
                  style={"marginBottom": "8px"}, children=[
             html.Div(className="graph-card", children=[
                 html.H4("Número de Proyectos por Responsable",
-                        style={"fontSize": "0.8rem"}),
+                        style={"fontSize": "15px"}),
                 html.P("Haz clic en una barra para ver la ficha",
                        style={"fontSize": "0.6rem", "color": "#999",
                               "textAlign": "center", "margin": "0 0 2px 0"}),
@@ -294,7 +302,7 @@ def render_home(session):
             ]),
             html.Div(className="graph-card", children=[
                 html.H4("Presupuesto por Portafolio",
-                        style={"fontSize": "0.8rem"}),
+                        style={"fontSize": "15px"}),
                 html.P("Haz clic en un segmento para ver el desglose",
                        style={"fontSize": "0.6rem", "color": "#999",
                               "textAlign": "center", "margin": "0 0 2px 0"}),
@@ -306,7 +314,7 @@ def render_home(session):
         html.Div(className="chart-row", style={"position": "relative", "zIndex": "10", "marginTop": "15px"}, children=[
             html.Div(className="graph-card", children=[
                 html.H4("Ranking de Tareas Delegadas Pendientes",
-                        style={"fontSize": "0.8rem"}),
+                        style={"fontSize": "15px"}),
                 html.P("Haz clic en una barra para ver el detalle",
                        style={"fontSize": "0.6rem", "color": "#999",
                               "textAlign": "center", "margin": "0 0 2px 0"}),
